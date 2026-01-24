@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus App Builder Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-soft { animation: pulse-soft 3s infinite; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-200 min-h-screen font-sans selection:bg-cyan-500/30">
+
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-600/10 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-12">
+        <header class="mb-12 text-center">
+            <div class="inline-block px-4 py-1.5 mb-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-widest animate-pulse-soft">
+                v2.0 Web-to-App Engine
+            </div>
+            <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-white mb-4">
+                Nexus <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Builder</span>
+            </h1>
+            <p class="text-slate-400 max-w-xl mx-auto text-lg">Konfiguriere deine High-Performance WebView App direkt im Browser. Wähle Berechtigungen, URL und Icons.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-7 space-y-6">
+                <div class="glass border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+                    <h2 class="text-xl font-bold text-white mb-6 flex items-center">
+                        <i data-lucide="settings" class="mr-2 text-cyan-400"></i> App Kern-Einstellungen
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="group">
+                            <label class="block text-sm font-semibold text-slate-400 mb-2 group-focus-within:text-cyan-400 transition-colors">Ziel-Webseite URL</label>
+                            <div class="relative">
+                                <i data-lucide="globe" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
+                                <input type="url" id="targetUrl" placeholder="https://deine-website.de" 
+                                    class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 outline-none transition-all text-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-400 mb-4 text-white">Native Berechtigungen</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button onclick="togglePerm('mic')" id="btn-mic" class="flex items-center p-4 bg-slate-900/50 border border-slate-700 rounded-2xl hover:border-cyan-500/50 transition-all group">
+                                    <div class="icon-box p-3 rounded-xl bg-slate-800 group-hover:bg-cyan-500/20 transition-colors">
+                                        <i data-lucide="mic" class="w-5 h-5 text-slate-400 group-hover:text-cyan-400"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-bold text-white">Mikrofon</p>
+                                        <p class="text-[10px] text-slate-500 uppercase font-black">RECORD_AUDIO</p>
+                                    </div>
+                                    <div class="ml-auto"><div class="dot w-3 h-3 rounded-full bg-slate-700"></div></div>
+                                </button>
+
+                                <button onclick="togglePerm('cam')" id="btn-cam" class="flex items-center p-4 bg-slate-900/50 border border-slate-700 rounded-2xl hover:border-cyan-500/50 transition-all group">
+                                    <div class="icon-box p-3 rounded-xl bg-slate-800 group-hover:bg-blue-500/20 transition-colors">
+                                        <i data-lucide="camera" class="w-5 h-5 text-slate-400 group-hover:text-blue-400"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-bold text-white">Kamera</p>
+                                        <p class="text-[10px] text-slate-500 uppercase font-black">CAMERA_ACCESS</p>
+                                    </div>
+                                    <div class="ml-auto"><div class="dot w-3 h-3 rounded-full bg-slate-700"></div></div>
+                                </button>
+
+                                <button onclick="togglePerm('loc')" id="btn-loc" class="flex items-center p-4 bg-slate-900/50 border border-slate-700 rounded-2xl hover:border-cyan-500/50 transition-all group">
+                                    <div class="icon-box p-3 rounded-xl bg-slate-800 group-hover:bg-emerald-500/20 transition-colors">
+                                        <i data-lucide="map-pin" class="w-5 h-5 text-slate-400 group-hover:text-emerald-400"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-bold text-white">Standort</p>
+                                        <p class="text-[10px] text-slate-500 uppercase font-black">FINE_LOCATION</p>
+                                    </div>
+                                    <div class="ml-auto"><div class="dot w-3 h-3 rounded-full bg-slate-700"></div></div>
+                                </button>
+
+                                <button onclick="togglePerm('push')" id="btn-push" class="flex items-center p-4 bg-slate-900/50 border border-slate-700 rounded-2xl hover:border-cyan-500/50 transition-all group">
+                                    <div class="icon-box p-3 rounded-xl bg-slate-800 group-hover:bg-purple-500/20 transition-colors">
+                                        <i data-lucide="bell" class="w-5 h-5 text-slate-400 group-hover:text-purple-400"></i>
+                                    </div>
+                                    <div class="ml-4 text-left">
+                                        <p class="text-sm font-bold text-white">Notifications</p>
+                                        <p class="text-[10px] text-slate-500 uppercase font-black">PUSH_SERVICE</p>
+                                    </div>
+                                    <div class="ml-auto"><div class="dot w-3 h-3 rounded-full bg-slate-700"></div></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="startBuild()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-6 rounded-3xl shadow-xl shadow-cyan-500/20 transition-all active:scale-95 flex items-center justify-center gap-3">
+                        <i data-lucide="zap" class="fill-current"></i> JETZT BUILD STARTEN
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="sticky top-12">
+                    <div class="relative mx-auto w-[300px] h-[600px] bg-slate-800 rounded-[3rem] border-[8px] border-slate-700 shadow-2xl overflow-hidden">
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-700 rounded-b-2xl z-20"></div>
+                        
+                        <div id="phone-screen" class="w-full h-full bg-white flex flex-col items-center justify-center p-6 text-center">
+                            <div id="preview-icon" class="w-20 h-20 bg-cyan-100 rounded-2xl mb-4 flex items-center justify-center shadow-lg">
+                                <i data-lucide="layout" class="text-cyan-600 w-10 h-10"></i>
+                            </div>
+                            <h3 id="preview-url-text" class="text-slate-800 font-bold text-sm truncate w-full">Keine URL gesetzt</h3>
+                            <p class="text-slate-400 text-[10px] mt-2 leading-relaxed">Vorschau deiner App. Aktiviere Berechtigungen links, um sie hier zu sehen.</p>
+                            
+                            <div id="preview-badges" class="flex flex-wrap gap-2 mt-6 justify-center">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let config = {
+            mic: false,
+            cam: false,
+            loc: false,
+            push: false
+        };
+
+        function togglePerm(key) {
+            config[key] = !config[key];
+            const btn = document.getElementById('btn-' + key);
+            const dot = btn.querySelector('.dot');
+            
+            if(config[key]) {
+                btn.classList.add('border-cyan-500', 'bg-cyan-500/5');
+                dot.classList.remove('bg-slate-700');
+                dot.classList.add('bg-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.8)]');
+            } else {
+                btn.classList.remove('border-cyan-500', 'bg-cyan-500/5');
+                dot.classList.add('bg-slate-700');
+                dot.classList.remove('bg-cyan-500', 'shadow-[0_0_10px_rgba(6,182,212,0.8)]');
+            }
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const url = document.getElementById('targetUrl').value || 'Keine URL gesetzt';
+            document.getElementById('preview-url-text').innerText = url;
+            
+            const badgeContainer = document.getElementById('preview-badges');
+            badgeContainer.innerHTML = '';
+            
+            if(config.mic) badgeContainer.innerHTML += '<span class="px-2 py-1 bg-cyan-100 text-cyan-700 rounded-md text-[8px] font-bold tracking-tighter italic">MIC</span>';
+            if(config.cam) badgeContainer.innerHTML += '<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-[8px] font-bold tracking-tighter italic">CAM</span>';
+            if(config.loc) badgeContainer.innerHTML += '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-[8px] font-bold tracking-tighter italic">GPS</span>';
+            if(config.push) badgeContainer.innerHTML += '<span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-[8px] font-bold tracking-tighter italic">PUSH</span>';
+        }
+
+        document.getElementById('targetUrl').addEventListener('input', updatePreview);
+
+        function startBuild() {
+            console.log("Sende Konfiguration an GitHub:", config);
+            alert("Build wurde getriggert!\nURL: " + document.getElementById('targetUrl').value + "\nPermissions: " + JSON.stringify(config));
+        }
+    </script>
+</body>
+</html>
