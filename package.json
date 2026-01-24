@@ -1,0 +1,14 @@
+{
+  "name": "nexus-app-engine",
+  "version": "1.0.0",
+  "description": "Web-to-App Converter",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
+  },
+  "scripts": {
+    "build": "echo 'No web build needed'"
+  }
+}
