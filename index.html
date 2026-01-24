@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Engine OS | Enterprise App Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        :root { --accent: #06b6d4; }
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #050505; color: #e2e8f0; }
+        .cyber-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .input-field { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 16px; outline: none; transition: all 0.3s; width: 100%; }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(6,182,212,0.15); }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tighter text-white">NEXUS<span class="text-cyan-500 italic">ENGINE</span></h1>
+                <p class="text-slate-500 text-sm font-medium uppercase tracking-widest">Advanced Web-to-Native Compiler</p>
+            </div>
+            <div id="connectionStatus" class="flex items-center gap-2 bg-red-500/10 text-red-500 px-4 py-2 rounded-full border border-red-500/20 text-xs font-bold">
+                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div> API DISCONNECTED
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-8 space-y-6">
+                
+                <div class="flex gap-8 border-b border-slate-800 mb-6">
+                    <button onclick="switchTab('auth')" id="tab-auth" class="tab-btn active pb-4 font-bold transition-all flex items-center gap-2"><i data-lucide="key" class="w-4"></i> AUTH</button>
+                    <button onclick="switchTab('config')" id="tab-config" class="tab-btn pb-4 font-bold text-slate-500 transition-all flex items-center gap-2"><i data-lucide="settings" class="w-4"></i> CONFIG</button>
+                    <button onclick="switchTab('design')" id="tab-design" class="tab-btn pb-4 font-bold text-slate-500 transition-all flex items-center gap-2"><i data-lucide="palette" class="w-4"></i> DESIGN</button>
+                </div>
+
+                <div id="content-auth" class="cyber-card rounded-3xl p-8 space-y-6">
+                    <h2 class="text-2xl font-bold italic">GitHub API Gate</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-slate-500 font-bold uppercase mb-2 block tracking-widest">Personal Access Token</label>
+                            <input type="password" id="ghToken" class="input-field" placeholder="ghp_************************************">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 font-bold uppercase mb-2 block tracking-widest">Repository Path</label>
+                            <input type="text" id="ghRepo" class="input-field" placeholder="username/repository-name">
+                        </div>
+                        <button onclick="saveAuth()" class="w-full bg-cyan-600 hover:bg-cyan-500 py-4 rounded-xl font-bold text-white transition-all shadow-lg shadow-cyan-900/20">IDENTITÄT BESTÄTIGEN</button>
+                    </div>
+                </div>
+
+                <div id="content-config" class="hidden cyber-card rounded-3xl p-8 space-y-6">
+                    <h2 class="text-2xl font-bold italic">Runtime Environment</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-500 font-bold uppercase mb-2 block tracking-widest">Target Web URL</label>
+                                <input type="url" id="appUrl" class="input-field" placeholder="https://example.com" oninput="updatePreview()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 font-bold uppercase mb-2 block tracking-widest">User Agent Name</label>
+                                <input type="text" id="userAgent" class="input-field" placeholder="NexusBrowser/1.0">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <label class="text-xs text-slate-500 font-bold uppercase mb-2 block tracking-widest">Hardware Native Bridge</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="toggleFeature('mic')" id="feat-mic" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center gap-2 hover:border-cyan-500 transition-all"><i data-lucide="mic" class="w-3"></i> Mic Access</button>
+                                <button onclick="toggleFeature('cam')" id="feat-cam" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center gap-2 hover:border-cyan-500 transition-all"><i data-lucide="camera" class="w-3"></i> Camera</button>
+                                <button onclick="toggleFeature('gps')" id="feat-gps" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center gap-2 hover:border-cyan-500 transition-all"><i data-lucide="map-pin" class="w-3"></i> Geolocation</button>
+                                <button onclick="toggleFeature('notif')" id="feat-notif" class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs flex items-center gap-2 hover:border-cyan-500 transition-all"><i data-lucide="bell" class="w-3"></i> Push Engine</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-design" class="hidden cyber-card rounded-3xl p-8 space-y-6">
+                    <h2 class="text-2xl font-bold italic">Visual Identity</h2>
+                    <div class="flex gap-8 items-center border border-slate-800 p-6 rounded-2xl bg-slate-900/50">
+                        <div class="w-32 h-32 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700 flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="document.getElementById('iconUpload').click()">
+                            <img id="iconPreview" class="hidden w-full h-full object-cover">
+                            <i data-lucide="plus" id="iconPlaceholder" class="text-slate-600"></i>
+                            <input type="file" id="iconUpload" class="hidden" accept="image/png" onchange="previewIcon(this)">
+                        </div>
+                        <div class="space-y-2">
+                            <p class="font-bold">App Branding Icon</p>
+                            <p class="text-xs text-slate-500">Upload 1024x1024px PNG. Dies wird automatisch für Splashscreens und Icons skaliert.</p>
+                            <input type="color" id="statusColor" class="w-full h-10 rounded-lg bg-transparent border-none cursor-pointer" oninput="updatePreview()">
+                            <p class="text-[10px] text-slate-600 uppercase font-black tracking-widest">Statusbar Hex-Color</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 p-1 rounded-3xl shadow-2xl">
+                    <button onclick="compileProject()" id="compileBtn" class="w-full py-8 bg-slate-900/80 rounded-[22px] font-black text-2xl text-white hover:bg-transparent transition-all border border-cyan-500/20 flex items-center justify-center gap-4">
+                        <i data-lucide="zap" class="text-cyan-400"></i> COMPILE PROJECT
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4">
+                <div class="sticky top-10">
+                    <div class="relative mx-auto w-[280px] h-[580px] bg-[#000] rounded-[3.5rem] border-[8px] border-slate-900 overflow-hidden shadow-[0_0_80px_rgba(6,182,212,0.15)]">
+                        <div id="mockStatus" class="h-10 w-full bg-cyan-600 flex justify-between items-center px-6 transition-colors">
+                            <span class="text-[10px] font-bold">Nexus Net</span>
+                            <div class="flex gap-1 items-center"><i data-lucide="wifi" class="w-3"></i><i data-lucide="battery" class="w-3"></i></div>
+                        </div>
+                        <div class="h-full bg-white p-4 flex flex-col items-center justify-center text-center">
+                            <div id="mockIcon" class="w-20 h-20 bg-slate-100 rounded-2xl mb-4 flex items-center justify-center border-2 border-slate-50 shadow-lg">
+                                <i data-lucide="image" class="text-slate-300"></i>
+                            </div>
+                            <h3 id="mockTitle" class="text-slate-900 font-bold italic tracking-tighter truncate w-full">nexus.app</h3>
+                            <p class="text-[9px] text-slate-400 mt-2 uppercase tracking-widest font-bold">Realtime Render Preview</p>
+                            <div id="mockBadges" class="flex flex-wrap gap-1 mt-6 justify-center"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // State Management
+        let appState = {
+            features: { mic: false, cam: false, gps: false, notif: false }
+        };
+
+        window.onload = () => {
+            const token = localStorage.getItem('nexus_token');
+            const repo = localStorage.getItem('nexus_repo');
+            if(token) {
+                document.getElementById('ghToken').value = token;
+                document.getElementById('ghRepo').value = repo || '';
+                updateStatus(true);
+            }
+        };
+
+        function switchTab(id) {
+            ['auth', 'config', 'design'].forEach(t => {
+                document.getElementById('content-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('active', 'text-cyan-400');
+                document.getElementById('tab-' + t).classList.add('text-slate-500');
+            });
+            document.getElementById('content-' + id).classList.remove('hidden');
+            document.getElementById('tab-' + id).classList.add('active', 'text-cyan-400');
+        }
+
+        function saveAuth() {
+            const t = document.getElementById('ghToken').value;
+            const r = document.getElementById('ghRepo').value;
+            localStorage.setItem('nexus_token', t);
+            localStorage.setItem('nexus_repo', r);
+            updateStatus(true);
+            alert("Credentials Encrypted & Stored.");
+        }
+
+        function updateStatus(connected) {
+            const s = document.getElementById('connectionStatus');
+            if(connected) {
+                s.innerHTML = `<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> API CONNECTED`;
+                s.className = "flex items-center gap-2 bg-green-500/10 text-green-500 px-4 py-2 rounded-full border border-green-500/20 text-xs font-bold";
+            }
+        }
+
+        function toggleFeature(id) {
+            appState.features[id] = !appState.features[id];
+            const btn = document.getElementById('feat-' + id);
+            btn.classList.toggle('border-cyan-500');
+            btn.classList.toggle('text-cyan-400');
+            updatePreview();
+        }
+
+        function previewIcon(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('iconPreview').src = e.target.result;
+                    document.getElementById('iconPreview').classList.remove('hidden');
+                    document.getElementById('iconPlaceholder').classList.add('hidden');
+                    document.getElementById('mockIcon').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-2xl">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updatePreview() {
+            const url = document.getElementById('appUrl').value || 'nexus.app';
+            document.getElementById('mockTitle').innerText = url.replace('https://', '');
+            document.getElementById('mockStatus').style.backgroundColor = document.getElementById('statusColor').value;
+            
+            const badges = document.getElementById('mockBadges');
+            badges.innerHTML = '';
+            Object.keys(appState.features).forEach(f => {
+                if(appState.features[f]) {
+                    badges.innerHTML += `<span class="px-2 py-0.5 bg-slate-100 text-slate-900 text-[7px] font-black rounded uppercase">${f}</span>`;
+                }
+            });
+        }
+
+        async function compileProject() {
+            const btn = document.getElementById('compileBtn');
+            const token = localStorage.getItem('nexus_token');
+            const repo = localStorage.getItem('nexus_repo');
+            
+            if(!token || !repo) return alert("Fehlende API-Daten!");
+
+            btn.disabled = true;
+            btn.innerHTML = `<div class="w-6 h-6 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div> COMPILING...`;
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify({
+                        event_type: 'build_app',
+                        client_payload: {
+                            url: document.getElementById('appUrl').value,
+                            mic: appState.features.mic,
+                            cam: appState.features.cam,
+                            gps: appState.features.gps,
+                            notif: appState.features.notif,
+                            color: document.getElementById('statusColor').value
+                        }
+                    })
+                });
+
+                if(response.ok) {
+                    alert("DEPLOYMENT GESTARTET! Prüfe deine GitHub Actions.");
+                } else {
+                    const error = await response.json();
+                    alert("Error: " + error.message);
+                }
+            } catch (e) {
+                alert("Netzwerkfehler!");
+            }
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="zap" class="text-cyan-400"></i> COMPILE PROJECT`;
+        }
+    </script>
+</body>
+</html>
