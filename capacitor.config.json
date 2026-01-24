@@ -1,0 +1,9 @@
+{
+  "appId": "com.shadowchat.app",
+  "appName": "Shadowchat",
+  "webDir": "www",
+  "server": {
+    "url": "PLACEHOLDER_URL",
+    "cleartext": true
+  }
+}
