@@ -1,4 +1,4 @@
-name: Nexus Build Engine
+name: Nexus Build Engine Pro
 on:
   repository_dispatch:
     types: [nexus_build_trigger]
@@ -10,49 +10,51 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node & Java
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: actions/setup-java@v4
+
+      - name: Setup Java 21 (Fix für dein Problem)
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21' # Von 17 auf 21 erhöht
           distribution: 'temurin'
 
-      - name: Install Capacitor
+      - name: Install Capacitor & Tools
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "${{ github.event.client_payload.name }}" "com.aman.nexus" --web-dir www
+          # Erstellt ein sauberes www Verzeichnis falls nicht da
+          mkdir -p www && touch www/index.html 
+          npx cap init "${{ github.event.client_payload.name }}" "com.nexus.pro" --web-dir www
           npx cap add android
 
-      - name: Customization Injection
+      - name: Advanced Customization Injection
         run: |
-          # URL und Fullscreen-Modus setzen
           CONFIG="capacitor.config.json"
+          PAYLOAD='${{ toJson(github.event.client_payload) }}'
+          
+          # URL Injektion
           URL="${{ github.event.client_payload.url }}"
-          
-          # Capacitor Config umschreiben
-          sed -i 's|server: {.*}|server: { "url": "'$URL'", "cleartext": true }|' $CONFIG
-          
-          # Orientation setzen
-          echo '{ "orientation": "${{ github.event.client_payload.orientation }}" }' > android/app/src/main/assets/capacitor.config.json
+          sed -i "s|server: {.*}|server: { \"url\": \"$URL\", \"cleartext\": true, \"allowNavigation\": [\"*\"] }| " $CONFIG
 
-          # Permissions (AndroidManifest)
+          # Android Manifest Tuning (Permissions)
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if [ "${{ github.event.client_payload.perms.mic }}" = "true" ]; then
-            sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
-          fi
-          if [ "${{ github.event.client_payload.perms.cam }}" = "true" ]; then
-            sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
-          fi
+          [ "${{ github.event.client_payload.perms.mic }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
+          [ "${{ github.event.client_payload.perms.cam }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
+          [ "${{ github.event.client_payload.perms.gps }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' $MANIFEST
+          
+          # Statusbar Farbe setzen (Android)
+          COLOR="${{ github.event.client_payload.color }}"
+          sed -i "s|<item name=\"android:statusBarColor\">.*</item>|<item name=\"android:statusBarColor\">$COLOR</item>|" android/app/src/main/res/values/colors.xml || true
 
-      - name: Build APK
+      - name: Build Android APK
         run: |
           npx cap copy android
-          cd android && ./gradlew assembleDebug
+          cd android && chmod +x gradlew && ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload Final APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.client_payload.name }}-App
+          name: ${{ github.event.client_payload.name }}-v3-Build
           path: android/app/build/outputs/apk/debug/app-debug.apk
