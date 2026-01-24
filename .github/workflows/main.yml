@@ -1,51 +1,57 @@
-name: Shadowchat Multi-Platform Build
+name: Shadowchat Ultimate Build
 on:
   repository_dispatch:
     types: [nexus_build_trigger]
 
 jobs:
-  # ANDROID BUILD
-  android-build:
-    runs-on: ubuntu-latest
+  build-all:
+    runs-on: macos-latest # macOS kann Android UND iOS bauen
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Setup Java (für Android)
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Build Android
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Create App Structures
         run: |
-          mkdir -p www && echo "init" > www/index.html
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          mkdir -p www
+          # Falls kein Icon mitgeschickt wurde, erstelle Dummy
+          echo "<html></html>" > www/index.html
           npx cap init "${{ github.event.client_payload.name }}" "${{ github.event.client_payload.id }}" --web-dir www
           npx cap add android
-          # Injection
-          sed -i "s|server: {.*}|server: { \"url\": \"${{ github.event.client_payload.url }}\", \"cleartext\": true }| " capacitor.config.json
+          npx cap add ios
+
+      - name: Inject Customization
+        run: |
+          # URL in die Config schreiben
+          sed -i "" "s|server: {.*}|server: { \"url\": \"${{ github.event.client_payload.url }}\", \"cleartext\": true }| " capacitor.config.json
+
+      - name: Build Android APK
+        run: |
           npx cap copy android
           cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
 
-  # IOS PREPARATION
-  ios-build:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup iOS Project
+      - name: Build iOS Project
         run: |
-          mkdir -p www && echo "init" > www/index.html
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
-          npx cap init "${{ github.event.client_payload.name }}" "${{ github.event.client_payload.id }}" --web-dir www
-          npx cap add ios
-          # Injection
-          sed -i "" "s|server: {.*}|server: { \"url\": \"${{ github.event.client_payload.url }}\", \"cleartext\": true }| " capacitor.config.json
           npx cap copy ios
-      - name: Archive Xcode Project
-        run: |
-          zip -r iOS-Project.zip ios/
-      - uses: actions/upload-artifact@v4
+          zip -r iOS-Xcode-Project.zip ios/
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
         with:
-          name: iOS-Xcode-Project
-          path: iOS-Project.zip
+          name: Mobile-Builds
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            iOS-Xcode-Project.zip
