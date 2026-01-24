@@ -1,44 +1,58 @@
-name: Nexus Build OS
+name: Nexus Build Engine
 on:
   repository_dispatch:
-    types: [build_app]
+    types: [nexus_build_trigger]
 
 jobs:
-  build:
+  build-android:
     runs-on: ubuntu-latest
     steps:
-      - name: System Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node & Java
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Setup Capacitor Engine
+      - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "NexusApp" "com.nexus.app" --web-dir www
+          npx cap init "${{ github.event.client_payload.name }}" "com.aman.nexus" --web-dir www
           npx cap add android
 
-      - name: Build Injection (Permissions & URL)
+      - name: Customization Injection
         run: |
-          # URL setzen
-          sed -i 's|server: {.*}|server: { "url": "${{ github.event.client_payload.url }}", "cleartext": true }|' capacitor.config.json
+          # URL und Fullscreen-Modus setzen
+          CONFIG="capacitor.config.json"
+          URL="${{ github.event.client_payload.url }}"
           
-          # Manifest Injection
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          [ "${{ github.event.client_payload.mic }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
-          [ "${{ github.event.client_payload.cam }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
-          [ "${{ github.event.client_payload.gps }}" = "true" ] && sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' $MANIFEST
+          # Capacitor Config umschreiben
+          sed -i 's|server: {.*}|server: { "url": "'$URL'", "cleartext": true }|' $CONFIG
+          
+          # Orientation setzen
+          echo '{ "orientation": "${{ github.event.client_payload.orientation }}" }' > android/app/src/main/assets/capacitor.config.json
 
-      - name: Build Android Bundle
+          # Permissions (AndroidManifest)
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ "${{ github.event.client_payload.perms.mic }}" = "true" ]; then
+            sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
+          fi
+          if [ "${{ github.event.client_payload.perms.cam }}" = "true" ]; then
+            sed -i '/<\/manifest>/i <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
+          fi
+
+      - name: Build APK
         run: |
           npx cap copy android
           cd android && ./gradlew assembleDebug
 
-      - name: Push Build to Artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-App-Build
+          name: ${{ github.event.client_payload.name }}-App
           path: android/app/build/outputs/apk/debug/app-debug.apk
