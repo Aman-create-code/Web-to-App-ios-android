@@ -1,11 +1,11 @@
-name: Shadowchat Ultimate Build
+name: Multi-Platform Build
 on:
   repository_dispatch:
     types: [nexus_build_trigger]
 
 jobs:
-  build-all:
-    runs-on: macos-latest # macOS kann Android UND iOS bauen
+  build:
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -14,9 +14,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
-      - name: Setup Java (für Android)
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -24,34 +22,33 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Create App Structures
+      - name: Inject Website URL
         run: |
-          mkdir -p www
-          # Falls kein Icon mitgeschickt wurde, erstelle Dummy
-          echo "<html></html>" > www/index.html
-          npx cap init "${{ github.event.client_payload.name }}" "${{ github.event.client_payload.id }}" --web-dir www
+          # Hier passiert die Magie: Die URL von der Website ersetzt den Platzhalter
+          sed -i "" "s|PLACEHOLDER_URL|${{ github.event.client_payload.url }}|g" capacitor.config.json
+          # Name anpassen
+          sed -i "" "s/Shadowchat/${{ github.event.client_payload.name }}/g" capacitor.config.json
+
+      - name: Initialize Platforms
+        run: |
+          mkdir -p www && echo " " > www/index.html
           npx cap add android
           npx cap add ios
 
-      - name: Inject Customization
-        run: |
-          # URL in die Config schreiben
-          sed -i "" "s|server: {.*}|server: { \"url\": \"${{ github.event.client_payload.url }}\", \"cleartext\": true }| " capacitor.config.json
-
-      - name: Build Android APK
+      - name: Android Build
         run: |
           npx cap copy android
           cd android && chmod +x gradlew && ./gradlew assembleDebug
 
-      - name: Build iOS Project
+      - name: iOS Build
         run: |
           npx cap copy ios
-          zip -r iOS-Xcode-Project.zip ios/
+          zip -r iOS-Project.zip ios/
 
-      - name: Upload Results
+      - name: Upload APK & iOS Project
         uses: actions/upload-artifact@v4
         with:
-          name: Mobile-Builds
+          name: App-Files
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
-            iOS-Xcode-Project.zip
+            iOS-Project.zip
