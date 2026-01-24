@@ -1,16 +1,16 @@
-name: Multi-Platform Build
+name: Shadowchat Enterprise Build
 on:
   repository_dispatch:
     types: [nexus_build_trigger]
 
 jobs:
-  build:
+  native-compilation:
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Setup Environment
+      - name: System Init (Node/Java/Ruby)
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -19,36 +19,48 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Inject Website URL
+      - name: Core Dependencies
         run: |
-          # Hier passiert die Magie: Die URL von der Website ersetzt den Platzhalter
-          sed -i "" "s|PLACEHOLDER_URL|${{ github.event.client_payload.url }}|g" capacitor.config.json
-          # Name anpassen
-          sed -i "" "s/Shadowchat/${{ github.event.client_payload.name }}/g" capacitor.config.json
-
-      - name: Initialize Platforms
-        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
           mkdir -p www && echo " " > www/index.html
+
+      - name: Dynamic Asset Processing
+        run: |
+          # URL & Name Injection
+          sed -i "" "s|PLACEHOLDER_URL|${{ github.event.client_payload.url }}|g" capacitor.config.json
+          sed -i "" "s/Shadowchat/${{ github.event.client_payload.name }}/g" capacitor.config.json
+          sed -i "" "s/com.shadowchat.network/${{ github.event.client_payload.id }}/g" capacitor.config.json
+          
           npx cap add android
           npx cap add ios
 
-      - name: Android Build
+      - name: Native Permission Injection (Android)
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ "${{ github.event.client_payload.perms.mic }}" = "true" ]; then
+            sed -i "" '/<\/manifest>/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' $MANIFEST
+          fi
+          if [ "${{ github.event.client_payload.perms.cam }}" = "true" ]; then
+            sed -i "" '/<\/manifest>/i <uses-permission android:name="android.permission.CAMERA" />' $MANIFEST
+          fi
+          if [ "${{ github.event.client_payload.perms.gps }}" = "true" ]; then
+            sed -i "" '/<\/manifest>/i <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' $MANIFEST
+          fi
+
+      - name: Android Hardware Build
         run: |
           npx cap copy android
           cd android && chmod +x gradlew && ./gradlew assembleDebug
 
-      - name: iOS Build
+      - name: iOS Project Generation
         run: |
           npx cap copy ios
           zip -r iOS-Project.zip ios/
 
-      - name: Upload APK & iOS Project
+      - name: Final Delivery
         uses: actions/upload-artifact@v4
         with:
-          name: App-Files
+          name: ${{ github.event.client_payload.name }}-Binaries
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             iOS-Project.zip
